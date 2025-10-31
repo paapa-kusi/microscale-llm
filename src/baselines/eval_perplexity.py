@@ -3,7 +3,7 @@ from datasets import load_dataset
 from transformers import AutoTokenizer, AutoModelForCausalLM
 from src.utils import device, timer
 
-model_name = "gpt2-medium"  # 355M baseline
+model_name = "gpt2-medium"
 tok = AutoTokenizer.from_pretrained(model_name)
 tok.pad_token = tok.eos_token
 

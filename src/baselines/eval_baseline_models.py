@@ -3,6 +3,10 @@ import torch
 import psutil
 import os
 from transformers import AutoTokenizer, GPT2LMHeadModel, AutoModelForCausalLM
+import torch.nn.utils.prune as prune
+from torch.quantization import quantize_dynamic
+import torch.onnx
+from bitsandbytes import Int4Params
 
 def evaluate_model(model, dataset, metrics):
     """
@@ -19,7 +23,6 @@ def evaluate_model(model, dataset, metrics):
     avg_loss = total_loss / len(dataset)
     metrics["perplexity"] = torch.exp(torch.tensor(avg_loss)).item()
 
-    # Add system metrics tracking (e.g., inference speed, memory usage)
     system_metrics = {
         "inference_speed": measure_inference_speed(model, dataset),
         "memory_footprint": measure_memory_footprint(model),
@@ -39,15 +42,15 @@ def measure_inference_speed(model, dataset):
     end_time = time.time()
     total_time = end_time - start_time
     num_samples = len(dataset)
-    return num_samples / total_time  # Samples per second
+    return num_samples / total_time  
 
 def measure_memory_footprint(model):
     """
     Measure the memory footprint of the model.
     """
     process = psutil.Process(os.getpid())
-    memory_usage = process.memory_info().rss  # Resident Set Size in bytes
-    return memory_usage / (1024 ** 2)  # Convert to MB
+    memory_usage = process.memory_info().rss
+    return memory_usage / (1024 ** 2)  
 
 def load_compressed_model(model_type, compression_type, compression_config):
     """
@@ -74,35 +77,55 @@ def load_compressed_model(model_type, compression_type, compression_config):
 
 def apply_pruning(model, pruning_ratio):
     """
-    Apply pruning to the model with the specified pruning ratio.
+    Apply structured or unstructured pruning to the model with the specified pruning ratio.
     """
-    # Placeholder for pruning logic
     print(f"Applying pruning with ratio {pruning_ratio}...")
-    # Example: Use torch.nn.utils.prune for structured/unstructured pruning
-    pass
+
+    for name, module in model.named_modules():
+        if isinstance(module, torch.nn.Linear):
+            prune.l1_unstructured(module, name='weight', amount=pruning_ratio)
+
+    for name, module in model.named_modules():
+        if isinstance(module, torch.nn.Linear):
+            prune.remove(module, 'weight')
+
 
 def apply_quantization(model, quantization_level):
     """
-    Apply quantization to the model with the specified quantization level.
+    Apply post-training quantization to the model with the specified quantization level.
     """
-    # Placeholder for quantization logic
     print(f"Applying {quantization_level} quantization...")
-    # Example: Use torch.quantization for post-training quantization
-    pass
+
+    if quantization_level == "INT8":
+        model = quantize_dynamic(model, {torch.nn.Linear}, dtype=torch.qint8)
+    elif quantization_level == "INT4":
+        # Use Hugging Face BitsAndBytes for INT4 quantization
+        try:
+            model = AutoModelForCausalLM.from_pretrained("gpt2-medium", load_in_4bit=True)
+        except Exception as e:
+            print(f"Error loading model with INT4 quantization: {e}")
+    elif quantization_level == "INT4-TensorRT":
+        # Export to ONNX and use TensorRT for INT4 quantization
+        dummy_input = torch.randn(1, 128, dtype=torch.float32).to(model.device)  # Adjust input size as needed
+        onnx_path = "model.onnx"
+        torch.onnx.export(model, dummy_input, onnx_path, opset_version=13)
+        print(f"Model exported to ONNX at {onnx_path}. Use TensorRT for INT4 quantization.")
+    else:
+        raise ValueError(f"Unsupported quantization level: {quantization_level}")
+
+    return model
 
 if __name__ == "__main__":
     tokenizer = AutoTokenizer.from_pretrained("gpt2-medium")
     
-    # Ensure the tokenizer has a padding token
     tokenizer.pad_token = tokenizer.eos_token if tokenizer.pad_token is None else tokenizer.pad_token
 
     sentences = [
         "Hello world!",
         "The quick brown fox jumps over the lazy dog.",
         "Test sentence for evaluation.",
-    ] * 4  # repeat to get a few samples
+    ] * 4  
 
-    # Tokenize the sentences with padding and truncation
     enc = tokenizer(sentences, return_tensors="pt", padding=True, truncation=True)
     dataset = []
     for i in range(enc["input_ids"].size(0)):
@@ -112,12 +135,10 @@ if __name__ == "__main__":
             "labels": enc["input_ids"][i].unsqueeze(0),
         })
 
-    # Evaluate baseline models
     model = GPT2LMHeadModel.from_pretrained("gpt2-medium")
     baseline_metrics = evaluate_model(model, dataset, metrics={})
     print(f"Baseline GPT-2 Medium: {baseline_metrics}")
 
-    # Evaluate compressed models
     compression_configs = [
         {"type": "pruning", "ratios": [0.1, 0.5, 0.9]},
         {"type": "quantization", "levels": ["INT8", "INT4"]},

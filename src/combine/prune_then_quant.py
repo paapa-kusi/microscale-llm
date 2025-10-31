@@ -26,9 +26,8 @@ def prune_and_quantize(model_name: str, heads_to_prune: dict, quantization_type:
     return model
 
 if __name__ == "__main__":
-    # Example usage
     model_name = "gpt2-medium"
-    heads_to_prune = {0: [0, 1], 1: [2, 3]}  # Example: prune heads 0, 1 in layer 0 and heads 2, 3 in layer 1
+    heads_to_prune = {0: [0, 1], 1: [2, 3]}  # prune heads 0, 1 in layer 0 and heads 2, 3 in layer 1
     quantization_type = "int8"
 
     model = prune_and_quantize(model_name, heads_to_prune, quantization_type)

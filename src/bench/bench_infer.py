@@ -34,7 +34,6 @@ def benchmark_inference(model_name: str, input_text: str):
     }
 
 if __name__ == "__main__":
-    # Example usage
     input_text = "The quick brown fox jumps over the lazy dog."
     model_name = "gpt2-medium"
     metrics = benchmark_inference(model_name, input_text)

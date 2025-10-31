@@ -13,7 +13,7 @@ def export_to_coreml(model: GPT2Model, output_path: str):
         output_path (str): The path to save the CoreML model.
     """
     model.eval()
-    example_input = torch.rand(1, 128)  # Example input for tracing
+    example_input = torch.rand(1, 128)
     traced_model = torch.jit.trace(model, example_input)
     coreml_model = ct.convert(
         traced_model,
@@ -31,19 +31,16 @@ def export_to_tflite(model: GPT2Model, output_path: str):
         output_path (str): The path to save the TensorFlow Lite model.
     """
     model.eval()
-    example_input = torch.rand(1, 128)  # Example input for tracing
+    example_input = torch.rand(1, 128)
     traced_model = torch.jit.trace(model, example_input)
 
-    # Convert to ONNX
     onnx_path = "temp_model.onnx"
     torch.onnx.export(traced_model, example_input, onnx_path, input_names=['input'], output_names=['output'])
 
-    # Convert ONNX to TensorFlow
     from onnx_tf.backend import prepare
     tf_rep = prepare(onnx.load(onnx_path))
     tf_rep.export_graph("temp_model.pb")
 
-    # Convert TensorFlow to TFLite
     converter = tf.lite.TFLiteConverter.from_saved_model("temp_model.pb")
     tflite_model = converter.convert()
     with open(output_path, "wb") as f:

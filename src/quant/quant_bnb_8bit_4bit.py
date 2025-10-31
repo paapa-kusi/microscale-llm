@@ -22,7 +22,6 @@ def quantize_model(model: GPT2Model, quantization_type: str):
         raise ValueError("Unsupported quantization type. Use 'int8' or 'int4'.")
 
 if __name__ == "__main__":
-    # Example usage
     model = GPT2Model.from_pretrained("gpt2-medium")
     quantize_model(model, quantization_type='int8')  # Apply INT8 quantization
     print("Model quantized successfully.")

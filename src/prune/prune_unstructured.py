@@ -15,7 +15,6 @@ def prune_weights_unstructured(model: GPT2Model, amount: float):
             prune.l1_unstructured(module, name='weight', amount=amount)
 
 if __name__ == "__main__":
-    # Example usage
     model = GPT2Model.from_pretrained("gpt2-medium")
     prune_weights_unstructured(model, amount=0.5)  # Prune 50% of weights
     print("Unstructured pruning applied successfully.")
