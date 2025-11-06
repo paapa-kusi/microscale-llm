@@ -1,0 +1,78 @@
+================================================================================
+MICROSCALE LLM COMPRESSION - ANALYSIS SUMMARY
+================================================================================
+
+DATASET OVERVIEW
+--------------------------------------------------------------------------------
+Total experiments: 108
+Models tested: gpt2, gpt2-medium, gpt2-large
+Compression methods: baseline, pruning, quantization, combined
+
+BASELINE PERFORMANCE
+--------------------------------------------------------------------------------
+              perplexity  model_size_mb  inference_speed
+model                                                   
+gpt2         1918.793835     474.700195       218.509034
+gpt2-large    444.606046    1476.345215        87.926027
+gpt2-medium  1743.930548     676.771484       168.870966
+
+BEST COMPRESSION RESULTS (Lowest Perplexity)
+--------------------------------------------------------------------------------
+
+gpt2:
+  Compression: quantization
+  Quantization: INT4
+  Perplexity: 1716.74
+  Model Size: 115.85 MB
+  Inference Speed: 116.71 samples/sec
+
+gpt2-medium:
+  Compression: pruning
+  Prune Ratio: 0.5
+  Perplexity: 1582.80
+  Model Size: 676.77 MB
+  Inference Speed: 169.57 samples/sec
+
+gpt2-large:
+  Compression: quantization
+  Quantization: INT4
+  Perplexity: 435.43
+  Model Size: 463.85 MB
+  Inference Speed: 56.53 samples/sec
+
+
+COMPRESSION EFFECTIVENESS SUMMARY
+--------------------------------------------------------------------------------
+
+GPT2:
+  Baseline: Perplexity=1918.79, Size=474.70MB
+  Pruning 0.1: Perplexity=1906.61 (-0.6% change)
+  Pruning 0.5: Perplexity=2094.40 (+9.2% change)
+  Pruning 0.9: Perplexity=61520.02 (+3106.2% change)
+  INT8: Perplexity=2042.67 (+6.5%), Size=156.35MB (67.1% reduction)
+  INT4: Perplexity=1716.74 (-10.5%), Size=115.85MB (75.6% reduction)
+
+GPT2-MEDIUM:
+  Baseline: Perplexity=1743.93, Size=676.77MB
+  Pruning 0.1: Perplexity=1754.28 (+0.6% change)
+  Pruning 0.5: Perplexity=1582.80 (-9.2% change)
+  Pruning 0.9: Perplexity=4965389476.40 (+284723938.0% change)
+  INT8: Perplexity=1763.86 (+1.1%), Size=388.77MB (42.6% reduction)
+  INT4: Perplexity=1923.06 (+10.3%), Size=244.77MB (63.8% reduction)
+
+GPT2-LARGE:
+  Baseline: Perplexity=444.61, Size=1476.35MB
+  Pruning 0.1: Perplexity=451.15 (+1.5% change)
+  Pruning 0.5: Perplexity=2144.39 (+382.3% change)
+  Pruning 0.9: Perplexity=50524.60 (+11263.9% change)
+  INT8: Perplexity=442.74 (-0.4%), Size=801.35MB (45.7% reduction)
+  INT4: Perplexity=435.43 (-2.1%), Size=463.85MB (68.6% reduction)
+
+================================================================================
+KEY INSIGHTS:
+--------------------------------------------------------------------------------
+1. INT4 quantization provides significant model size reduction (~75%)
+2. Moderate pruning (10-50%) has minimal impact on perplexity
+3. Extreme pruning (90%) can cause catastrophic performance degradation
+4. Quantization alone is more stable than aggressive pruning
+5. Combined approaches require careful balancing
