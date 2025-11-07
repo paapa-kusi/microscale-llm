@@ -14,22 +14,26 @@ PRUNE_RATIOS=(0.1 0.5 0.9)
 # Focus on models that fit common GPUs by default
 MODELS_ARRAY=(${MODELS:-gpt2 gpt2-medium gpt2-large})
 SEED=${SEED:-42}
+TRIALS=${TRIALS:-1}
 
 for MODEL in "${MODELS_ARRAY[@]}"; do
-    echo "========================================"
-    echo "Pruning experiments for ${MODEL}"
-    echo "========================================"
-    for RATIO in "${PRUNE_RATIOS[@]}"; do
-        echo "Running pruning with ratio $RATIO on $MODEL ..."
-        python scripts/run_experiment.py \
-          --model "${MODEL}" \
-          --compression pruning \
-          --prune_ratio "${RATIO}" \
-          --seed "${SEED}"
-        echo
-        echo "---"
-        echo
+  echo "========================================"
+  echo "Pruning experiments for ${MODEL}"
+  echo "========================================"
+  for RATIO in "${PRUNE_RATIOS[@]}"; do
+    for (( t=0; t<TRIALS; t++ )); do
+      SEED_EFF=$((SEED + t))
+      echo "Running pruning with ratio $RATIO on $MODEL (trial $((t+1))/${TRIALS}, seed=${SEED_EFF}) ..."
+      python scripts/run_experiment.py \
+        --model "${MODEL}" \
+        --compression pruning \
+        --prune_ratio "${RATIO}" \
+        --seed "${SEED_EFF}"
+      echo
+      echo "---"
+      echo
     done
+  done
 done
 
 echo "Pruning experiments completed for all models. Results in results/"

@@ -14,13 +14,18 @@ fi
 # Only test models that are also used in pruning/quantization experiments
 MODELS_ARRAY=(${MODELS:-gpt2-medium gpt2-large})
 SEED=${SEED:-42}
+TRIALS=${TRIALS:-1}
 
 for MODEL in "${MODELS_ARRAY[@]}"; do
-    echo "========================================"
-    echo "Running baseline evaluation for ${MODEL}"
-    echo "========================================"
-    python scripts/run_experiment.py --model "${MODEL}" --seed "${SEED}"
+  echo "========================================"
+  echo "Running baseline evaluation for ${MODEL}"
+  echo "========================================"
+  for (( t=0; t<TRIALS; t++ )); do
+    SEED_EFF=$((SEED + t))
+    echo "Trial $((t+1))/${TRIALS} (seed=${SEED_EFF})"
+    python scripts/run_experiment.py --model "${MODEL}" --seed "${SEED_EFF}"
     echo
+  done
 done
 
 echo "Baseline completed for all models. Results in results/"

@@ -64,7 +64,8 @@ def make_subprocess_command(model, compression, config, trial=0, quick=False,
                             perplexity_dataset=None, perplexity_split=None, perplexity_samples=None,
                             extrinsic=False, downstream_dataset=None, downstream_split=None, extrinsic_samples=None,
                             run_id=None, skip_if_exists=False,
-                            seq_length=None, batch_size=None, precision=None, use_flash_attn=False):
+                            seq_length=None, batch_size=None, precision=None, use_flash_attn=False,
+                            base_seed: int = 42):
     base = [sys.executable, RUN_SCRIPT, "--model", model]
     if compression is None:
         pass
@@ -106,7 +107,7 @@ def make_subprocess_command(model, compression, config, trial=0, quick=False,
         if isinstance(extrinsic_samples, int) and extrinsic_samples > 0:
             base += ["--extrinsic-samples", str(extrinsic_samples)]
     # Add seed for reproducibility (different per trial)
-    base += ["--seed", str(42 + trial)]
+    base += ["--seed", str(base_seed + trial)]
     return base
 
 
@@ -143,6 +144,7 @@ def main():
     parser.add_argument("--quant-levels", nargs="*", default=["INT8", "INT4"]) 
     parser.add_argument("--workers", type=int, default=1)
     parser.add_argument("--trials", type=int, default=5, help="Number of trials per configuration for statistical robustness")
+    parser.add_argument("--seed", type=int, default=42, help="Base random seed; per-trial seeds are seed+trial")
     parser.add_argument("--use-gpu", type=lambda s: s.lower() in ("true", "1", "yes"), default=True)
     parser.add_argument("--quick", action="store_true")
     parser.add_argument("--dry-run", action="store_true")
@@ -186,14 +188,14 @@ def main():
         extr_samples = max(10, min(args.extrinsic_samples, 30)) if args.quick else args.extrinsic_samples
         # Build deterministic run-id for resume/skip
         if comp is None:
-            run_id = f"{model}__baseline__seed={42+trial}"
+            run_id = f"{model}__baseline__seed={args.seed+trial}"
         elif comp == "pruning":
-            run_id = f"{model}__pruning__prune={cfg}__seed={42+trial}"
+            run_id = f"{model}__pruning__prune={cfg}__seed={args.seed+trial}"
         elif comp == "quantization":
-            run_id = f"{model}__quantization__quant={cfg}__seed={42+trial}"
+            run_id = f"{model}__quantization__quant={cfg}__seed={args.seed+trial}"
         elif comp == "combined":
             p, q = str(cfg).split(":")
-            run_id = f"{model}__combined__prune={p}__quant={q}__seed={42+trial}"
+            run_id = f"{model}__combined__prune={p}__quant={q}__seed={args.seed+trial}"
         else:
             run_id = None
         safe_run_id = run_id.replace("/", "-") if run_id else None
@@ -218,6 +220,7 @@ def main():
             batch_size=args.batch_size,
             precision=args.precision,
             use_flash_attn=args.use_flash_attn,
+            base_seed=args.seed,
         )
         tasks.append(cmd)
 
