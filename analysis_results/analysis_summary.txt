@@ -4,7 +4,7 @@ MICROSCALE LLM COMPRESSION - ANALYSIS SUMMARY
 
 DATASET OVERVIEW
 --------------------------------------------------------------------------------
-Total experiments: 108
+Total experiments: 36
 Models tested: gpt2, gpt2-medium, gpt2-large
 Compression methods: baseline, pruning, quantization, combined
 
@@ -12,61 +12,61 @@ BASELINE PERFORMANCE
 --------------------------------------------------------------------------------
               perplexity  model_size_mb  inference_speed
 model                                                   
-gpt2         1918.793835     474.700195       218.509034
-gpt2-large    444.606046    1476.345215        87.926027
-gpt2-medium  1743.930548     676.771484       168.870966
+gpt2         1761.500951     474.700195       198.586300
+gpt2-large    508.260174    1476.345215       106.553935
+gpt2-medium  1510.849553     676.771484       170.681334
 
 BEST COMPRESSION RESULTS (Lowest Perplexity)
 --------------------------------------------------------------------------------
 
 gpt2:
-  Compression: quantization
+  Compression: combined
+  Prune Ratio: 0.1
   Quantization: INT4
-  Perplexity: 1716.74
+  Perplexity: 1425.32
   Model Size: 115.85 MB
-  Inference Speed: 116.71 samples/sec
+  Inference Speed: 72.04 samples/sec
 
 gpt2-medium:
-  Compression: pruning
-  Prune Ratio: 0.5
-  Perplexity: 1582.80
-  Model Size: 676.77 MB
-  Inference Speed: 169.57 samples/sec
+  Compression: quantization
+  Quantization: INT8
+  Perplexity: 1210.71
+  Model Size: 388.77 MB
+  Inference Speed: 27.67 samples/sec
 
 gpt2-large:
-  Compression: quantization
-  Quantization: INT4
-  Perplexity: 435.43
-  Model Size: 463.85 MB
-  Inference Speed: 56.53 samples/sec
+  Compression: baseline
+  Perplexity: 508.26
+  Model Size: 1476.35 MB
+  Inference Speed: 106.55 samples/sec
 
 
 COMPRESSION EFFECTIVENESS SUMMARY
 --------------------------------------------------------------------------------
 
 GPT2:
-  Baseline: Perplexity=1918.79, Size=474.70MB
-  Pruning 0.1: Perplexity=1906.61 (-0.6% change)
-  Pruning 0.5: Perplexity=2094.40 (+9.2% change)
-  Pruning 0.9: Perplexity=61520.02 (+3106.2% change)
-  INT8: Perplexity=2042.67 (+6.5%), Size=156.35MB (67.1% reduction)
-  INT4: Perplexity=1716.74 (-10.5%), Size=115.85MB (75.6% reduction)
+  Baseline: Perplexity=1761.50, Size=474.70MB
+  Pruning 0.1: Perplexity=1752.07 (-0.5% change)
+  Pruning 0.5: Perplexity=1813.85 (+3.0% change)
+  Pruning 0.9: Perplexity=80352.67 (+4461.6% change)
+  INT8: Perplexity=1576.32 (-10.5%), Size=156.35MB (67.1% reduction)
+  INT4: Perplexity=1459.12 (-17.2%), Size=115.85MB (75.6% reduction)
 
 GPT2-MEDIUM:
-  Baseline: Perplexity=1743.93, Size=676.77MB
-  Pruning 0.1: Perplexity=1754.28 (+0.6% change)
-  Pruning 0.5: Perplexity=1582.80 (-9.2% change)
-  Pruning 0.9: Perplexity=4965389476.40 (+284723938.0% change)
-  INT8: Perplexity=1763.86 (+1.1%), Size=388.77MB (42.6% reduction)
-  INT4: Perplexity=1923.06 (+10.3%), Size=244.77MB (63.8% reduction)
+  Baseline: Perplexity=1510.85, Size=676.77MB
+  Pruning 0.1: Perplexity=1516.07 (+0.3% change)
+  Pruning 0.5: Perplexity=1393.78 (-7.7% change)
+  Pruning 0.9: Perplexity=3791646431.94 (+250961117.4% change)
+  INT8: Perplexity=1210.71 (-19.9%), Size=388.77MB (42.6% reduction)
+  INT4: Perplexity=1266.06 (-16.2%), Size=244.77MB (63.8% reduction)
 
 GPT2-LARGE:
-  Baseline: Perplexity=444.61, Size=1476.35MB
-  Pruning 0.1: Perplexity=451.15 (+1.5% change)
-  Pruning 0.5: Perplexity=2144.39 (+382.3% change)
-  Pruning 0.9: Perplexity=50524.60 (+11263.9% change)
-  INT8: Perplexity=442.74 (-0.4%), Size=801.35MB (45.7% reduction)
-  INT4: Perplexity=435.43 (-2.1%), Size=463.85MB (68.6% reduction)
+  Baseline: Perplexity=508.26, Size=1476.35MB
+  Pruning 0.1: Perplexity=516.25 (+1.6% change)
+  Pruning 0.5: Perplexity=2274.02 (+347.4% change)
+  Pruning 0.9: Perplexity=48867.85 (+9514.7% change)
+  INT8: Perplexity=1300.59 (+155.9%), Size=801.35MB (45.7% reduction)
+  INT4: Perplexity=1201.28 (+136.4%), Size=463.85MB (68.6% reduction)
 
 ================================================================================
 KEY INSIGHTS:

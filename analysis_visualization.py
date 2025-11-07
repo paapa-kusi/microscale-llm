@@ -42,12 +42,11 @@ def load_and_prepare_data(csv_path):
 def plot_perplexity_by_model_and_method(df, output_dir):
     """
     Create grouped bar plots showing perplexity for each model and compression method.
-    Note: Excludes 'combined' compression and extreme pruning (0.9) for better visualization.
+    Note: Excludes extreme pruning (0.9) for better visualization due to catastrophic failure.
     """
-    # Filter out combined compression (appears to be duplicate data)
-    # Also filter out extreme pruning (0.9) for clearer visualization
-    df_filtered = df[(df['compression'] != 'combined') & 
-                     ~((df['compression'] == 'pruning') & (df['prune_ratio'] == 0.9))].copy()
+    # Filter out extreme pruning (0.9) for clearer visualization
+    df_filtered = df[~((df['compression'] == 'pruning') & (df['prune_ratio'] == 0.9)) &
+                     ~((df['compression'] == 'combined') & (df['prune_ratio'] == 0.9))].copy()
     
     # Prepare data - average across seeds (dropna=False to handle NaN in prune_ratio/quant_level)
     df_avg = df_filtered.groupby(['model', 'compression', 'prune_ratio', 'quant_level'], dropna=False).agg({
@@ -61,13 +60,15 @@ def plot_perplexity_by_model_and_method(df, output_dir):
         'Baseline' if row['compression'] == 'baseline'
         else f"Prune {row['prune_ratio']:.1f}" if row['compression'] == 'pruning'
         else f"{row['quant_level']}" if row['compression'] == 'quantization'
+        else f"P{row['prune_ratio']:.1f}+{row['quant_level']}" if row['compression'] == 'combined'
         else 'Unknown', axis=1)
     
     # Sort models by size: small -> medium -> large
     models = ['gpt2', 'gpt2-medium', 'gpt2-large']
     
-    # Define method order for consistent display
-    method_order = ['Baseline', 'Prune 0.1', 'Prune 0.5', 'FP16', 'INT8', 'INT4']
+    # Define method order for consistent display (includes combined methods now)
+    method_order = ['Baseline', 'Prune 0.1', 'Prune 0.5', 'INT8', 'INT4', 
+                    'P0.1+INT8', 'P0.1+INT4', 'P0.5+INT8', 'P0.5+INT4']
     all_methods = [m for m in method_order if m in df_avg['method'].values]
     
     if len(all_methods) == 0:
@@ -105,7 +106,7 @@ def plot_perplexity_by_model_and_method(df, output_dir):
     
     ax.set_ylabel('Perplexity', fontsize=13, fontweight='bold')
     ax.set_xlabel('Model', fontsize=13, fontweight='bold')
-    ax.set_title('Perplexity Comparison: Individual Compression Methods\n(Excludes: Combined methods due to data issues, Prune 0.9 due to catastrophic failure)', 
+    ax.set_title('Perplexity Comparison: All Compression Methods\n(Excludes: Prune 0.9 due to catastrophic failure)', 
                  fontsize=13, fontweight='bold')
     ax.set_xticks(x)
     ax.set_xticklabels(['GPT-2\n(124M)', 'GPT-2-Medium\n(355M)', 'GPT-2-Large\n(774M)'], fontsize=11)
@@ -196,7 +197,8 @@ def plot_quantization_effect(df, output_dir):
     
     # Plot 1: Perplexity by Quantization Level
     ax1 = axes[0]
-    models = df_avg['model'].unique()
+    # Sort models by size: small -> medium -> large
+    models = ['gpt2', 'gpt2-medium', 'gpt2-large']
     quant_levels = ['FP16', 'INT8', 'INT4']
     x = np.arange(len(models))
     width = 0.25
@@ -223,7 +225,7 @@ def plot_quantization_effect(df, output_dir):
     ax1.set_ylabel('Perplexity (log scale)', fontsize=12, fontweight='bold')
     ax1.set_title('Effect of Quantization on Perplexity', fontsize=14, fontweight='bold')
     ax1.set_xticks(x)
-    ax1.set_xticklabels(models)
+    ax1.set_xticklabels(['GPT-2\n(124M)', 'GPT-2-Medium\n(355M)', 'GPT-2-Large\n(774M)'])
     ax1.legend(fontsize=11, title='Quantization Level')
     ax1.grid(axis='y', alpha=0.3)
     ax1.set_yscale('log')
@@ -246,7 +248,7 @@ def plot_quantization_effect(df, output_dir):
     ax2.set_ylabel('Model Size (MB)', fontsize=12, fontweight='bold')
     ax2.set_title('Model Size by Quantization Level', fontsize=14, fontweight='bold')
     ax2.set_xticks(x)
-    ax2.set_xticklabels(models)
+    ax2.set_xticklabels(['GPT-2\n(124M)', 'GPT-2-Medium\n(355M)', 'GPT-2-Large\n(774M)'])
     ax2.legend(fontsize=11, title='Quantization Level')
     ax2.grid(axis='y', alpha=0.3)
     
